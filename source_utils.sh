@@ -55,3 +55,21 @@ function _get_datetime() {
 function _get_nospace_datetime() {
     date '+%d.%m.%Y-%H:%M:%S'
 }
+
+function _evaluate() {
+    local expression="$1"
+    echo "$expression" | bc -l
+}
+
+function _compare() {
+    local expression="$1"
+    local result="$(_evaluate "$expression")"
+
+    if [[ "$result" == 1 ]]; then
+        echo true
+        return 0
+    fi
+
+    echo false
+    return 0
+}
