@@ -73,3 +73,20 @@ function _compare() {
     echo false
     return 0
 }
+
+
+function _is_even() {
+    local value="$1"
+
+    local ceil_result
+    let "ceil_result = $value / 2"    
+    local result="$(_evaluate "$value / 2 - $ceil_result")"
+
+    if [[ "$(_compare "$result > 0")" == true ]]; then
+        echo false
+        return 0
+    fi
+
+    echo true
+    return 0
+}
