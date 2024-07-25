@@ -9,6 +9,8 @@ export __tte__cross_winner='X'
 export __tte__circle_winner='@'
 export __tte__empty='-'
 
+export __tte__figure_pattern="[${__tte__cross}${__tte__circle}${__tte__cross_winner}${__tte__circle_winner}${__tte__empty}]"
+
 export __TIC_TAC_TOE_MATRIX=(
     "$__tte__empty" "$__tte__empty" "$__tte__empty"
     "$__tte__empty" "$__tte__empty" "$__tte__empty"
@@ -23,15 +25,12 @@ export __tte__matrix_length=3
 
 function __tte__validate_figure() {
     local figure="$1"
+    
+    if [[ "$figure" =~ ($__tte__figure_pattern) ]]; then
+        echo true && return 0
+    fi
 
-    [[ "$figure" != "$__tte__cross" ]] && \
-    [[ "$figure" != "$__tte__circle" ]] && \
-    [[ "$figure" != "$__tte__cross_winner" ]] && \
-    [[ "$figure" != "$__tte__circle_winner" ]] && \
-    [[ "$figure" != "$__tte__empty" ]] && \
-        echo false && return 0
-
-    echo true
+    echo false
     return 0
 }
 
@@ -280,7 +279,7 @@ function __tte__matrix_get_winner_points() {
     return 0
 }
 
-function __tte__matrix_get_winner() {
+function __tte__matrix_get_winner_coordinates_pair() {
     local cross_winner_points="$(__tte__matrix_get_winner_points "$__tte__cross")"
     local circle_winner_points="$(__tte__matrix_get_winner_points "$__tte__circle")"
 
@@ -289,6 +288,19 @@ function __tte__matrix_get_winner() {
 
     echo "$__tte__empty"
     return 0
+}
+
+function __tte__matrix_has_winner() {
+    [[ "$(__tte__matrix_get_winner_coordinates_pair)" == "$__tte__empty" ]] && echo false && return 0
+
+    echo true
+    return 0
+}
+
+function __tte__matrix_get_coordinates_by_wc_pair() {
+    local pair="$1"
+
+    echo "${pair/$__tte__validate_figure? /}"
 }
 
 function __tte__matrix_count() {

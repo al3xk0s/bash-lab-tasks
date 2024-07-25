@@ -51,6 +51,25 @@ function _get_step_value() {
     _get_enemy_step && return 0
 }
 
+function _on_round_end() {
+    local player_score="$1"
+    local enemy_score="$2"
+
+    local player_figure="$3"
+    local enemy_figure="$4"
+
+    local winner_points_str="$(__tte__matrix_get_winner_coordinates_pair)"
+
+    local winner="${winner_points_str::1}"
+    local winner_points="$(__tte__matrix_get_coordinates_by_wc_pair "$winner_points_str")"
+
+    [[ "$winner" == "$__tte_empty" ]] && _on_round_draw && return 0
+
+    __tte__matrix_fill_points "$(__tte__get_winner_figure "$winner")" "$winner_points"
+    clear    
+    __tte__matrix_print
+}
+
 function _make_round() {
     local player_score="$1"
     local enemy_score="$2"
@@ -75,7 +94,7 @@ function _make_round() {
     }
 
     function _is_end_round() {
-        [[ "$step" != '0' ]] && [[ "$(__tte__matrix_count_empty)" == '0' ]] && echo true && return 0
+        [[ "$step" != '0' ]] && ([[ "$(__tte__matrix_count_empty)" == '0' ]] || [[ "$(__tte__matrix_has_winner)" == true ]]) && echo true && return 0
 
         echo false
         return 0
@@ -93,11 +112,17 @@ function _make_round() {
         __tte__matrix_set_figure_point "$step_value" "$(_current_figure)"
         step="$(( $step + 1 ))"        
     done
+
+    _on_round_end \
+        "$player_score" \
+        "$enemy_score" \
+        "$player_figure" \
+        "$enemy_figure"
 }
 
 
 function main() {    
-    _make_round 0 0 x o x
+    _make_round 0 0 $__tte__cross $__tte__circle $__tte__cross
 }
 
 
