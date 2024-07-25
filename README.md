@@ -47,3 +47,40 @@ function main() {
 Полезная дока
 
 https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
+
+## Булеан значения
+
+Вопреки всему, мы можем использовать булы
+
+Например, есть функция:
+
+```bash
+function _is_even() {
+    local value="$1"
+
+    local result="$(( $value % 2 ))"
+
+    [[ "$result" == '0' ]] && echo true && return 0
+
+    echo false
+    return 0
+}
+```
+
+Её можно использовать как:
+
+```bash
+[[ "$(_is_even 2)" == true ]] && echo is_true
+```
+
+Так и:
+
+```bash
+"$(_is_even 2)" && echo is_true
+```
+
+**Но не так:**
+
+```bash
+[[ "$(_is_even 2)" ]] && echo is_true
+```

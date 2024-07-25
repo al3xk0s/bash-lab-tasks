@@ -1,34 +1,34 @@
 source ./source_utils.sh
 source ./point_structure.sh
 
-__tte__animation_delay='0.4'
+export __tte__animation_delay='0.4'
 
-__tte__cross='x'
-__tte__circle='o'
-__tte__cross_winner='X'
-__tte__circle_winner='@'
-__tte__empty='-'
+export __tte__cross='x'
+export __tte__circle='o'
+export __tte__cross_winner='X'
+export __tte__circle_winner='@'
+export __tte__empty='-'
 
-__TIC_TAC_TOE_MATRIX=(
+export __TIC_TAC_TOE_MATRIX=(
     "$__tte__empty" "$__tte__empty" "$__tte__empty"
     "$__tte__empty" "$__tte__empty" "$__tte__empty"
     "$__tte__empty" "$__tte__empty" "$__tte__empty"
 )
 
-__tte__matrix_length=3
+export __tte__matrix_length=3
 
 # 6 7 8   0 1 2 (2)
 # 3 4 5   0 1 2 (1)
 # 0 1 2   0 1 2 (0)
 
-function __tte__validate_value() {
-    local value="$1"
+function __tte__validate_figure() {
+    local figure="$1"
 
-    [[ "$value" != "$__tte__cross" ]] && \
-    [[ "$value" != "$__tte__circle" ]] && \
-    [[ "$value" != "$__tte__cross_winner" ]] && \
-    [[ "$value" != "$__tte__circle_winner" ]] && \
-    [[ "$value" != "$__tte__empty" ]] && \
+    [[ "$figure" != "$__tte__cross" ]] && \
+    [[ "$figure" != "$__tte__circle" ]] && \
+    [[ "$figure" != "$__tte__cross_winner" ]] && \
+    [[ "$figure" != "$__tte__circle_winner" ]] && \
+    [[ "$figure" != "$__tte__empty" ]] && \
         echo false && return 0
 
     echo true
@@ -49,74 +49,89 @@ function __tte__validate_coordinates() {
     return 0
 }
 
-function __tte__matrix_set_value() {
+function __tte__validate_coordinates_point() {
+    local point="$1"
+
+    [[ "$(__point__match "$point")" != true ]] && return -1
+    
+    __tte__validate_coordinates "$(__point__x "$point")" "$(__point__y "$point")"
+}
+
+function __tte__matrix_map_coordinates() {
+    local row="$1"
+    local column="$2"   
+
+    echo "$(( $row * $__tte__matrix_length + $column ))"
+}
+
+function __tte__matrix_set_figure() {
     local row="$1"
     local column="$2"    
 
-    local value="$3"
+    local figure="$3"
     
-    [[ "$(__tte__validate_value "$value")" != true ]] && return -1
+    [[ "$(__tte__validate_figure "$figure")" != true ]] && return -1
     [[ "$(__tte__validate_coordinates "$row" "$column")" != true ]] && return -1
 
-    local index="$(_evaluate "$row * 3 + $column")"
+    local index="$(__tte__matrix_map_coordinates "$row" "$column")"
     
-    __TIC_TAC_TOE_MATRIX[$index]="$value"    
+    __TIC_TAC_TOE_MATRIX[$index]="$figure"    
     return 0
 }
 
-function __tte__matrix_set_value_point() {
+function __tte__matrix_set_figure_point() {
     local point="$1"
-    local value="$2"
+    local figure="$2"
 
     [[ "$(__point__match "$point")" != true ]] && return -1
 
-    __tte__matrix_set_value "$(__point__x "$point")" "$(__point__y "$point")" "$value"
+    __tte__matrix_set_figure "$(__point__x "$point")" "$(__point__y "$point")" "$figure"
 }
 
-function __tte__matrix_get_value() {
+function __tte__matrix_get_figure() {
     local row="$1"
     local column="$2"    
 
     [[ "$(__tte__validate_coordinates "$row" "$column")" != true ]] && return -1
 
-    local index="$(_evaluate "$row * 3 + $column")"
+    local index="$(__tte__matrix_map_coordinates "$row" "$column")"
     
     echo "${__TIC_TAC_TOE_MATRIX[$index]}"
     return 0
 }
 
-function __tte__matrix_get_value_point() {
+function __tte__matrix_get_figure_point() {
     local point="$1"    
 
     [[ "$(__point__match "$point")" != true ]] && return -1
 
-    __tte__matrix_get_value "$(__point__x "$point")" "$(__point__y "$point")"
+    __tte__matrix_get_figure "$(__point__x "$point")" "$(__point__y "$point")"
 }
 
 function __tte__matrix_fill() {
-    local value="$1"
+    local figure="$1"
 
     local r
     local c
 
-    [[ "$(__tte__validate_value "$value")" != true ]] && return -1
+    [[ "$(__tte__validate_figure "$figure")" != true ]] && return -1
 
     for ((r = 0 ; r < __tte__matrix_length ; r++)); do        
         for ((c = 0 ; c < __tte__matrix_length ; c++)); do
-            __tte__matrix_set_value "$r" "$c" "$value"
+            __tte__matrix_set_figure "$r" "$c" "$figure"
         done
     done
 }
 
 function __tte__matrix_fill_points() {
     IFS=" "
-    local value="$1"
+    local figure="$1"
     local points=($2)
 
 
     local point
     for point in ${points[@]}; do
-        __tte__matrix_set_value_point "$point" "$value"
+        __tte__matrix_set_figure_point "$point" "$figure"
     done
 }
 
@@ -132,7 +147,7 @@ function __tte__matrix_print() {
     for ((r = __tte__matrix_length - 1 ; r >= 0; r--)); do
         row="$r "
         for ((c = 0 ; c < __tte__matrix_length ; c++)); do
-            row="$row|$(__tte__matrix_get_value "$r" "$c")"
+            row="$row|$(__tte__matrix_get_figure "$r" "$c")"
         done
         row="$row|"
         echo "$row"        
@@ -175,20 +190,20 @@ function __tte__matrix_animated_clean() {
     __tte__matrix_fill "$__tte__empty"
     __tte__matrix_animation_frame
 
-    __tte__matrix_set_value 2 0 "$__tte__circle"
-    __tte__matrix_set_value 0 2 "$__tte__cross"
+    __tte__matrix_set_figure 2 0 "$__tte__circle"
+    __tte__matrix_set_figure 0 2 "$__tte__cross"
     __tte__matrix_animation_frame
 
-    __tte__matrix_set_value 1 0 "$__tte__circle"
-    __tte__matrix_set_value 1 2 "$__tte__cross"
+    __tte__matrix_set_figure 1 0 "$__tte__circle"
+    __tte__matrix_set_figure 1 2 "$__tte__cross"
     __tte__matrix_animation_frame
 
-    __tte__matrix_set_value 0 0 "$__tte__circle"
-    __tte__matrix_set_value 2 2 "$__tte__cross"
+    __tte__matrix_set_figure 0 0 "$__tte__circle"
+    __tte__matrix_set_figure 2 2 "$__tte__cross"
     __tte__matrix_animation_frame
 
-    __tte__matrix_set_value 0 1 "$__tte__circle"
-    __tte__matrix_set_value 2 1 "$__tte__cross"
+    __tte__matrix_set_figure 0 1 "$__tte__circle"
+    __tte__matrix_set_figure 2 1 "$__tte__cross"
     __tte__matrix_animation_frame no-clean
     __tte__animation_delay 3
     clear
@@ -198,13 +213,13 @@ function __tte__matrix_animated_clean() {
 
 function __tte__matrix_is_row_winner() {    
     local row="$1"
-    local value="$2"
+    local figure="$2"
 
-    ([[ -z "$value" ]] || [[ -z "$coordinate" ]]) && return -1
+    ([[ -z "$figure" ]] || [[ -z "$coordinate" ]]) && return -1
 
-    [[ "$(__tte__matrix_get_value "$coordinate" 0)" == "$value" ]] && \
-    [[ "$(__tte__matrix_get_value "$coordinate" 1)" == "$value" ]] && \
-    [[ "$(__tte__matrix_get_value "$coordinate" 2)" == "$value" ]] && \
+    [[ "$(__tte__matrix_get_figure "$coordinate" 0)" == "$figure" ]] && \
+    [[ "$(__tte__matrix_get_figure "$coordinate" 1)" == "$figure" ]] && \
+    [[ "$(__tte__matrix_get_figure "$coordinate" 2)" == "$figure" ]] && \
         echo true && return 0
 
     echo false
@@ -213,13 +228,13 @@ function __tte__matrix_is_row_winner() {
 
 function __tte__matrix_is_column_winner() {    
     local row="$1"
-    local value="$2"
+    local figure="$2"
 
-    ([[ -z "$value" ]] || [[ -z "$coordinate" ]]) && return -1
+    ([[ -z "$figure" ]] || [[ -z "$coordinate" ]]) && return -1
 
-    [[ "$(__tte__matrix_get_value 0 "$coordinate")" == "$value" ]] && \
-    [[ "$(__tte__matrix_get_value 1 "$coordinate")" == "$value" ]] && \
-    [[ "$(__tte__matrix_get_value 2 "$coordinate")" == "$value" ]] && \
+    [[ "$(__tte__matrix_get_figure 0 "$coordinate")" == "$figure" ]] && \
+    [[ "$(__tte__matrix_get_figure 1 "$coordinate")" == "$figure" ]] && \
+    [[ "$(__tte__matrix_get_figure 2 "$coordinate")" == "$figure" ]] && \
             echo true && return 0
 
     echo false
@@ -228,37 +243,37 @@ function __tte__matrix_is_column_winner() {
 
 
 function __tte__matrix_get_winner_points() {
-    local value="$1"
+    local figure="$1"
 
-    [[ "$(__tte__validate_value "$value")" != true ]] && return -1
+    [[ "$(__tte__validate_figure "$figure")" != true ]] && return -1
 
-    [[ "$(__tte__matrix_get_value 0 0)" == "$value" ]] && \
-    [[ "$(__tte__matrix_get_value 1 1)" == "$value" ]] && \
-    [[ "$(__tte__matrix_get_value 2 2)" == "$value" ]] && \
+    [[ "$(__tte__matrix_get_figure 0 0)" == "$figure" ]] && \
+    [[ "$(__tte__matrix_get_figure 1 1)" == "$figure" ]] && \
+    [[ "$(__tte__matrix_get_figure 2 2)" == "$figure" ]] && \
         __point__create_str_array 0 0 1 1 2 2 && return 0
 
-    [[ "$(__tte__matrix_get_value 2 0)" == "$value" ]] && \
-    [[ "$(__tte__matrix_get_value 1 1)" == "$value" ]] && \
-    [[ "$(__tte__matrix_get_value 0 2)" == "$value" ]] && \
+    [[ "$(__tte__matrix_get_figure 2 0)" == "$figure" ]] && \
+    [[ "$(__tte__matrix_get_figure 1 1)" == "$figure" ]] && \
+    [[ "$(__tte__matrix_get_figure 0 2)" == "$figure" ]] && \
         __point__create_str_array 2 0 1 1 0 2 && return 0
 
-    [[ "$(__tte__matrix_is_row_winner 0 "$value")" == true ]] && \
+    [[ "$(__tte__matrix_is_row_winner 0 "$figure")" == true ]] && \
         __point__create_str_array 0 0 0 1 0 2 && return 0
 
-    [[ "$(__tte__matrix_is_row_winner 1 "$value")" == true ]] && \
+    [[ "$(__tte__matrix_is_row_winner 1 "$figure")" == true ]] && \
         __point__create_str_array 1 0 1 1 1 2 && return 0
 
-    [[ "$(__tte__matrix_is_row_winner 2 "$value")" == true ]] && \
+    [[ "$(__tte__matrix_is_row_winner 2 "$figure")" == true ]] && \
         __point__create_str_array 2 0 2 1 2 2 && return 0
     
 
-    [[ "$(__tte__matrix_is_column_winner 0 "$value")" == true ]] && \
+    [[ "$(__tte__matrix_is_column_winner 0 "$figure")" == true ]] && \
         __point__create_str_array 0 0 1 0 2 0 && return 0
 
-    [[ "$(__tte__matrix_is_column_winner 1 "$value")" == true ]] && \
+    [[ "$(__tte__matrix_is_column_winner 1 "$figure")" == true ]] && \
         __point__create_str_array 0 1 1 1 2 1 && return 0
 
-    [[ "$(__tte__matrix_is_column_winner 2 "$value")" == true ]] && \
+    [[ "$(__tte__matrix_is_column_winner 2 "$figure")" == true ]] && \
         __point__create_str_array 0 2 1 2 2 2 && return 0
 
     echo ""
@@ -277,9 +292,9 @@ function __tte__matrix_get_winner() {
 }
 
 function __tte__matrix_count() {
-    local value="$1"
+    local figure="$1"
 
-    [[ "$(__tte__validate_value "$value")" != true ]] && return -1
+    [[ "$(__tte__validate_figure "$figure")" != true ]] && return -1
 
     local counter="0"
 
@@ -287,7 +302,7 @@ function __tte__matrix_count() {
     local c
     for ((r = 0 ; r < __tte__matrix_length ; r++)); do
         for ((c = 0 ; c < __tte__matrix_length ; c++)); do
-            if [[ "$(__tte__matrix_get_value "$r" "$c")" == "$value" ]]; then
+            if [[ "$(__tte__matrix_get_figure "$r" "$c")" == "$figure" ]]; then
                 let "counter = counter + 1"
             fi
         done
@@ -298,4 +313,56 @@ function __tte__matrix_count() {
 
 function __tte__matrix_count_empty() {
     __tte__matrix_count "$__tte__empty"
+}
+
+function __tte__get_winner_figure() {
+    local figure="$1"
+
+    [[ "$(__tte__validate_figure "$figure")" != true ]] && return -1
+    
+    [[ "$figure" == "$__tte__cross" ]] && echo "$__tte__cross_winner" && return 0
+    [[ "$figure" == "$__tte__circle" ]] && echo "$__tte__circle_winner" && return 0
+
+    echo "$figure"
+    return 0
+}
+
+function __tte__matrix_get_points() {
+    local figure="$1"
+    local result=""
+
+    local r
+    local c
+    local point
+    
+    for ((r = 0 ; r < __tte__matrix_length ; r++)); do
+      for ((c = 0 ; c < __tte__matrix_length ; c++)); do
+        point="$(__point__create "$r" "$c")"
+        if [[ "$(__tte__matrix_get_figure_point "$point")" == "$figure" ]]; then
+            if [[ "$result" == "" ]]; then
+                result="$point"
+            else
+                result="$result $point"
+            fi            
+        fi
+      done  
+    done
+
+    echo "$result"
+    return 0
+}
+
+function __tte__matrix_get_empty_points() {
+    __tte__matrix_get_points "$__tte__empty"
+}
+
+function __tte__matrix_is_empty_point() {
+    local point="$1"
+    
+    [[ "$(__point__match "$point")" != true ]] && return -1
+    
+    [[ "$(__tte__matrix_get_figure_point "$point")" == "$__tte__empty" ]] && echo true && return 0
+
+    echo false
+    return 0
 }

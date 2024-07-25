@@ -78,15 +78,35 @@ function _compare() {
 function _is_even() {
     local value="$1"
 
-    local ceil_result
-    let "ceil_result = $value / 2"    
-    local result="$(_evaluate "$value / 2 - $ceil_result")"
+    local result="$(( $value % 2 ))"
 
-    if [[ "$(_compare "$result > 0")" == true ]]; then
-        echo false
-        return 0
-    fi
+    [[ "$result" == '0' ]] && echo true && return 0
+
+    echo false
+    return 0
+}
+
+function _not() {
+    local value="$1"
+
+    [[ "$value" == true ]] && echo false && return 0
 
     echo true
     return 0
+}
+
+function _random_short() {
+    local max="$1"
+
+    echo "$(( $RANDOM % $max ))"
+}
+
+function _random_short_between() {
+    local min="$1"
+    local max="$2"
+
+    [[ -z "$max" ]] && max="$min" && min="0"
+
+    local minimized_random="$(_random_short "$(( $max - $min ))")"
+    echo "$(( $minimized_random + $min ))"
 }
