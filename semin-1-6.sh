@@ -15,11 +15,11 @@ function _get_player_step() {
 
     local point="$(__point__create "$row" "$column")"
 
-    [[ "$(__tte__validate_coordinates_point "$point")" != true ]] && \
+    [[ "$(__tte__field_validate_point "$point")" != true ]] && \
     _get_player_step "$figure" "Введены неверные координаты. " && \
     return 0
     
-    [[ "$(__tte__matrix_is_empty_point "$point")" != true ]] && \
+    [[ "$(__tte__field_is_empty_point "$point")" != true ]] && \
     _get_player_step "$figure" "Выбранная точка занята. " && \
     return 0
 
@@ -28,7 +28,7 @@ function _get_player_step() {
 }
 
 function _get_enemy_step() {    
-    local variants=($(__tte__matrix_get_empty_points))
+    local variants=($(__tte__field_find_empty_points))
 
     local length="${#variants[@]}"
 
@@ -58,16 +58,16 @@ function _on_round_end() {
     local player_figure="$3"
     local enemy_figure="$4"
 
-    local winner_points_str="$(__tte__matrix_get_winner_coordinates_pair)"
+    local winner_points_str="$(__tte__field_get_winner_points_pair)"
 
-    local winner="${winner_points_str::1}"
-    local winner_points="$(__tte__matrix_get_coordinates_by_wc_pair "$winner_points_str")"
+    local winner="$(__tte__field_get_winner)"
+    local winner_points="$(__tte__field_get_winner_points)"
 
     [[ "$winner" == "$__tte_empty" ]] && _on_round_draw && return 0
 
-    __tte__matrix_fill_points "$(__tte__get_winner_figure "$winner")" "$winner_points"
+    __tte__field_fill_points "$(__tte__figure_to_winner "$winner")" "$winner_points"
     clear    
-    __tte__matrix_print
+    __tte__field_print
 }
 
 function _make_round() {
@@ -94,7 +94,7 @@ function _make_round() {
     }
 
     function _is_end_round() {
-        [[ "$step" != '0' ]] && ([[ "$(__tte__matrix_count_empty)" == '0' ]] || [[ "$(__tte__matrix_has_winner)" == true ]]) && echo true && return 0
+        [[ "$step" != '0' ]] && ([[ "$(__tte__field_count_empty)" == '0' ]] || [[ "$(__tte__field_has_winner)" == true ]]) && echo true && return 0
 
         echo false
         return 0
@@ -102,14 +102,14 @@ function _make_round() {
 
     local step_value=""
 
-    __tte__matrix_animated_clean
+    __tte__field_animated_clean
 
     while [ ! "$(_is_end_round)" = true ]; do
         clear
-        __tte__matrix_print
+        __tte__field_print
 
         step_value="$(_get_step_value "$player_figure" "$enemy_figure" "$(_current_figure)")"
-        __tte__matrix_set_figure_point "$step_value" "$(_current_figure)"
+        __tte__field_set "$step_value" "$(_current_figure)"
         step="$(( $step + 1 ))"        
     done
 
