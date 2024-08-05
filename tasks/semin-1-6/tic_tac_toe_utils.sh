@@ -1,4 +1,5 @@
-source ../source_utils.sh
+source ../../utils/source_utils.sh
+source ../../utils/test_utils.sh
 source ./point_structure.sh
 source ./tic_tac_toe_field.sh
 

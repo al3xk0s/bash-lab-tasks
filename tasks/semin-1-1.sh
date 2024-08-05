@@ -1,6 +1,6 @@
 #! /usr/bin/bash
 
-source ./source_utils.sh
+source ../utils/source_utils.sh
 
 function main() {
     local original_file="$0"

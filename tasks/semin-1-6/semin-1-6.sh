@@ -1,6 +1,6 @@
 #! /usr/bin/bash
 
-source ../source_utils.sh
+source ../../utils/source_utils.sh
 source ./tic_tac_toe_utils.sh
 source ./point_structure.sh
 

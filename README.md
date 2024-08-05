@@ -1,7 +1,7 @@
 # Задачи
 
-- [ ] Проверить теорию "Крестики всегда ходят первыми"
-- [ ] Добавить насмешки и счет
+- [x] Проверить теорию "Крестики всегда ходят первыми"
+- [x] Добавить насмешки и счет
 - [ ] Заебаться со вторым заданием
 
 # Зависимости
@@ -16,23 +16,27 @@ bc
 ### Создать
 
 ```bash
-arr=(1 2 '34')
+arr=(1 2 '3 4')
 ```
 
 ### Массив как аргумент
 
-**Передача массивом**
+**Передача массивом (стабильно)**
 
 ```bash
 function _foo() {
   local some="$1"
   shift
   local_arr=("$@")
+
+  for i in "${local_arr[@]}"; do
+    echo $i
+  done
 }
 
 function main() {
   local arr=(1 2 3)
-  _foo "${arr[@]}"
+  _foo "${arr[@]}" # можно и строку передать
 }
 ```
 
@@ -51,6 +55,26 @@ function main() {
   local arr=(1 2 3)
   _foo "${arr[*]}"
 }
+```
+
+**Передача по ссылке (стабильно)**
+
+```bash
+#!/usr/bin/env bash
+
+create_array() {
+    local -n arr=$1             # use nameref for indirection
+    arr=(one "two three" four)
+}
+
+use_array() {
+    local my_array
+    create_array my_array       # call function to populate the array
+    echo "inside use_array"
+    declare -p my_array         # test the array
+}
+
+use_array                       # call the main function
 ```
 
 ## Параметры
